@@ -152,9 +152,9 @@ const CheckList = () => {
                                     id="comment"
                                     value={additionalComments[questions[currentQuestionIndex].GDPR_Checklist_Question] || ''}
                                     onChange={handleCommentChange}
-                                    rows={5}
+                                    rows={10}
                                     cols={30}
-                                    style={{ width: '80%', marginTop: '0.5rem', marginRight: '20px' }}
+                                    style={{ width: '80%', marginTop: '0.5rem', marginRight: '20px', fontSize: '1.5rem' }}
                                     disabled={loading}
                                 />
                             </div>
