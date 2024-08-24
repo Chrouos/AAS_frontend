@@ -196,7 +196,7 @@ const CheckPrivacyPolicy = () => {
 
 
     return (
-        <div className="card">
+        <div className="card" style={{fontSize: '1.3rem'}}>
             <div className="flex justify-content-between align-items-center">
                 <div className="flex justify-content-center" style={{ flexGrow: 1 }}>
                     <Dropdown 
@@ -251,7 +251,7 @@ const CheckPrivacyPolicy = () => {
             </div>
             <Divider className="mt-5 mb-5"></Divider>
             <div className="flex justify-content-center">
-                <div className="w-10" style={{ fontSize: '1.1em', lineHeight: '1.6' }}>
+                <div className="w-8" style={{ fontSize: '1.1em', lineHeight: '1.6' }}>
                     {test}
                 </div>
             </div>

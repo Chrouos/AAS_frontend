@@ -111,7 +111,7 @@ const CheckList = () => {
         <div className="grid p-fluid" style={{ height: '80vh', fontSize: '1.5rem' }}>
             <div className="card" style={{ width: '80%', height: '100%', marginBottom: '10px', position: 'relative', margin: 'auto' }}>
                 <div style={{ float: 'left', height: '100%', width: '50%', position: 'relative', margin: 'auto' }}>
-                    <h1>個人資料保護問卷</h1>
+                    <h1>隱私保障法普小學堂</h1>
                     {questions.length > 0 && (
                         <div className="field">
                             <div style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#007ad9', letterSpacing: '0.02rem' }}>
@@ -238,7 +238,7 @@ const CheckList = () => {
                         icon="pi pi-chevron-right"
                         iconPos="right"
                         onClick={handleNextQuestion}
-                        disabled={!answers[questions[currentQuestionIndex]?.GDPR_Checklist_Question] || loading || currentQuestionIndex >= answeredQuestionsCount}
+                        disabled={loading}
                         style={{ width: '150px', padding: '0.25rem', marginLeft: 'auto' }}
                     />
                 </div>

@@ -23,7 +23,7 @@ const AppTopbar = forwardRef<AppTopbarRef, AppTopbarProps>((props, ref) => {
         <div className="layout-topbar" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
             <Link href="/"  className="layout-topbar-logo" style={{ display: 'flex', alignItems: 'center', position: 'absolute', left: '2%' }}>
                 <img src={`/layout/images/logo-${layoutConfig.colorScheme !== 'light' ? 'white' : 'dark'}.svg`} width="47.22px" height={'35px'} alt="logo" />
-                <span style={{ marginLeft: '5px' }}>AAS</span>
+                <span style={{ marginLeft: '5px' }}>AI Alignment System</span>
             </Link>
 
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
