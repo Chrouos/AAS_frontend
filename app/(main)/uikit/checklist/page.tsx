@@ -145,9 +145,9 @@ const CheckList = () => {
                                 </div>
                             </div>
                             <div className="field">
-                                <label htmlFor="comment" style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>
+                                <div style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>
                                     請輸入您想提問的問題：
-                                </label>
+                                </div>
                                 <InputTextarea
                                     id="comment"
                                     value={additionalComments[questions[currentQuestionIndex].GDPR_Checklist_Question] || ''}
