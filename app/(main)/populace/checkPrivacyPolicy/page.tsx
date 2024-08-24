@@ -4,6 +4,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import { MultiSelect, MultiSelectChangeEvent } from 'primereact/multiselect';
 import { Divider } from 'primereact/divider';
+import { Dialog } from 'primereact/dialog';
 import stringReplace from 'react-string-replace';
 
 interface Company {
@@ -177,9 +178,9 @@ const CheckPrivacyPolicy = () => {
     };
 
     return (
-        <div>
-            <div className="card">
-                <div className="flex justify-content-center">
+        <div className="card">
+            <div className="flex justify-content-between align-items-center">
+                <div className="flex justify-content-center" style={{ flexGrow: 1 }}>
                     <Dropdown 
                         value={selectCompany} 
                         onChange={handleCompanyChange} 
@@ -198,23 +199,56 @@ const CheckPrivacyPolicy = () => {
                         itemTemplate={countryTemplate} 
                         panelFooterTemplate={panelFooterTemplate} 
                         className="w-full w-auto ml-2" 
-                        display="chip" />
+                        display="chip" 
+                    />
                     <Button 
                         label="確定" 
                         icon="pi pi-check" 
                         className="ml-2 w-auto" 
-                        // disabled={!selectCompanyUrl || !selectedLaw}
                         onClick={handleConfirm}
                     />
                 </div>
-                <Divider className="mt-5 mb-5"></Divider>
-                <div className="flex justify-content-center">
-                    <div className="w-10" style={{ fontSize: '1.1em', lineHeight: '1.6' }}>
-                        {test}
-                    </div>
-                </div> 
+                <div 
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        width: '45px',
+                        height: '45px',
+                        border: '5px solid red',
+                        borderRadius: '50%',
+                        marginLeft: 'auto',  // 保持這一行
+                    }}
+                >
+                    <span
+                        style={{
+                            color: 'red',
+                            fontSize: '15px',
+                            fontWeight: 'bold',
+                        }}
+                    >
+                        100
+                    </span>
+                </div>
             </div>
-            
+            <Divider className="mt-5 mb-5"></Divider>
+            <div className="flex justify-content-center">
+                <div className="w-10" style={{ fontSize: '1.1em', lineHeight: '1.6' }}>
+                    {test}
+                </div>
+            </div>
+            <Dialog 
+                header={<span style={{ fontSize: '1.5rem' }}>詳細資訊</span>} 
+                visible={isModalVisible} 
+                style={{ width: '50vw' }} 
+                modal 
+                onHide={() => setIsModalVisible(false)}
+            >
+                <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>違規法條</h4>
+                <p>{modalContent}</p>
+                <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>修正建議</h4>
+                <p>{modalAmendment}</p>
+            </Dialog>
         </div>
     );
 };
