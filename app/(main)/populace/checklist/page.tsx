@@ -108,19 +108,19 @@ const CheckList = () => {
     };
 
     return (
-        <div className="grid p-fluid" style={{ height: '80vh' }}>
+        <div className="grid p-fluid" style={{ height: '80vh', fontSize: '1.7rem' }}>
             <div className="card" style={{ width: '80%', height: '100%', marginBottom: '10px', position: 'relative', margin: 'auto' }}>
                 <div style={{ float: 'left', height: '100%', width: '50%', position: 'relative', margin: 'auto' }}>
-                    <h2>個人資料保護問卷</h2>
+                    <h1>個人資料保護問卷</h1>
                     {questions.length > 0 && (
                         <div className="field">
-                            <div style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#007ad9', fontSize: '1.2rem', letterSpacing: '0.02rem' }}>
+                            <div style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#007ad9', letterSpacing: '0.02rem' }}>
                                 {currentQuestionIndex + 1}. {questions[currentQuestionIndex].Checklist_Item}
                             </div>
-                            <label style={{ display: 'block', fontWeight: 'bold', fontSize: '1.2rem', letterSpacing: '0.02rem' }}>
+                            <label style={{ display: 'block', fontWeight: 'bold', letterSpacing: '0.02rem' }}>
                                 {questions[currentQuestionIndex].GDPR_Checklist_Question}
                             </label>
-                            <div className="p-formgroup-inline" style={{ marginTop: '0.5rem' }}>
+                            <div className="p-formgroup-inline" style={{ marginTop: '0.5rem',  }}>
                                 <div className="field-radiobutton">
                                     <RadioButton
                                         inputId={`${currentQuestionIndex}-yes`}
@@ -193,15 +193,19 @@ const CheckList = () => {
                         float: 'right', 
                         width: '50%', 
                         height: '100%',
-                        padding: '10px', 
+                        padding: '25px', 
                         border: '1px solid #ccc', 
                         borderRadius: '10px',
                         backgroundColor: loading ? '#d3d3d3' : '#f9f9f9', 
                         boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.1)',
-                        position: 'relative'
+                        position: 'relative',
                     }}
                 >
-                    <p>{chatBotResponse}</p>
+                    <p>
+                        {chatBotResponse.split('\n').map((line, index) => (
+                            <span key={index}> {line} <br /> </span>
+                        ))}
+                    </p>
                     {loading && (
                         <div 
                             style={{
@@ -224,7 +228,7 @@ const CheckList = () => {
                             icon="pi pi-chevron-left"
                             onClick={handlePreviousQuestion}
                             className="p-button-secondary"
-                            style={{ width: '150px', padding: '0.25rem', fontSize: '0.9rem' }}
+                            style={{ width: '150px', padding: '0.25rem' }}
                             disabled={loading}
                         />
                     )}
@@ -234,7 +238,7 @@ const CheckList = () => {
                         iconPos="right"
                         onClick={handleNextQuestion}
                         disabled={!answers[questions[currentQuestionIndex]?.GDPR_Checklist_Question] || loading || currentQuestionIndex >= answeredQuestionsCount}
-                        style={{ width: '150px', padding: '0.25rem', fontSize: '0.9rem', marginLeft: 'auto' }}
+                        style={{ width: '150px', padding: '0.25rem', marginLeft: 'auto' }}
                     />
                 </div>
             )}
