@@ -2,7 +2,6 @@
 import React, { useState, useEffect, ReactNode } from "react";
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
-import { MultiSelect, MultiSelectChangeEvent } from 'primereact/multiselect';
 import { Divider } from 'primereact/divider';
 import { Dialog } from 'primereact/dialog';
 import stringReplace from 'react-string-replace';
@@ -25,7 +24,7 @@ interface Report {
 
 
 const CheckPrivacyPolicy = () => {
-    const [selectedLaw, setSelectedLaw] = useState<Law[] | null>(null);
+    const [selectedLaw, setSelectedLaw] = useState<Law | null>(null);  // 修改為單選
     const [companyList, setCompanyList] = useState<Company[]>([]);
     const [lawList, setLawList] = useState([]);
     const [selectCompany, setSelectCompany] = useState<string | null>(null);
@@ -82,11 +81,11 @@ const CheckPrivacyPolicy = () => {
         setTest(test1);
         try {
             if (selectCompanyUrl && selectedLaw) {
-                console.log(selectedLaw[0].title);
+                console.log(selectedLaw.title);
                 console.log(selectCompanyUrl);
                 const request = {
                     url: selectCompanyUrl,
-                    selected_law: selectedLaw[0].title
+                    selected_law: selectedLaw.title
                 };
                 const response = await fetch("http://140.115.54.33:5469/submit_ai_act_form", {
                     method: "POST",
@@ -127,16 +126,6 @@ const CheckPrivacyPolicy = () => {
         );
     };
 
-    const panelFooterTemplate = () => {
-        const length = selectedLaw ? selectedLaw.length : 0;
-
-        return (
-            <div className="py-2 px-3">
-                <b>{length}</b> item{length > 1 ? 's' : ''} selected.
-            </div>
-        );
-    };
-
     useEffect(() => {
         fetchCompanyPrivacyPolicy();
         fetchAvailablePrivacyLaws();
@@ -156,7 +145,6 @@ const CheckPrivacyPolicy = () => {
         }
     };
 
-    // highlight 文字
     // highlight 文字
     const highlightPrivacyPolicy = (text: string, reports: Report[]): ReactNode[] => {
         // 將 \n 替換為 <br />，以處理換行
@@ -208,16 +196,14 @@ const CheckPrivacyPolicy = () => {
                         placeholder="Select a Company" 
                         className="w-full w-auto" 
                     />
-                    <MultiSelect 
+                    <Dropdown
                         value={selectedLaw} 
                         options={lawList} 
-                        onChange={(e: MultiSelectChangeEvent) => setSelectedLaw(e.value)} 
+                        onChange={(e) => setSelectedLaw(e.value)} 
                         optionLabel="title" 
                         placeholder="Select a Law" 
                         itemTemplate={countryTemplate} 
-                        panelFooterTemplate={panelFooterTemplate} 
                         className="w-full w-auto ml-2" 
-                        display="chip" 
                     />
                     <Button 
                         label="確定" 
