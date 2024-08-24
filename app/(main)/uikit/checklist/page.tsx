@@ -108,7 +108,7 @@ const CheckList = () => {
     };
 
     return (
-        <div className="grid p-fluid" style={{ height: '580px' }}>
+        <div className="grid p-fluid" style={{ height: '80vh' }}>
             <div className="card" style={{ width: '80%', height: '100%', marginBottom: '10px', position: 'relative', margin: 'auto' }}>
                 <div style={{ float: 'left', height: '100%', width: '50%', position: 'relative', margin: 'auto' }}>
                     <h2>個人資料保護問卷</h2>
