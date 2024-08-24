@@ -15,7 +15,8 @@ const AppMenu = () => {
             label: 'Home',
             items: [
                 { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
-                { label: 'Check List', icon: 'pi pi-fw pi-globe', to: '/uikit/checklist' }
+                { label: 'Check List', icon: 'pi pi-fw pi-globe', to: '/populace/checklist' }
+                { label: 'Check Privacy Policy', icon: 'pi pi-fw pi-globe', to: '/populace/checkPrivacyPolicy' }
             ]
         },
         {

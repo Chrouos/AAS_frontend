@@ -27,21 +27,21 @@ const AppTopbar = forwardRef<AppTopbarRef, AppTopbarProps>((props, ref) => {
             </Link>
 
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <Link href="/uikit/checklist">
+                <Link href="/populace/checklist">
                     <span
-                        className={`nav-link ${props.currentPath === '/uikit/checklist' ? 'nav-link-active' : ''}`}
+                        className={`nav-link ${props.currentPath === '/populace/checklist' ? 'nav-link-active' : ''}`}
                         style={{ color: layoutConfig.colorScheme !== 'light' ? 'white' : 'black', margin: '0 16px' }}
                     >
                         Check List
                     </span>
                 </Link>
 
-                <Link href="/uikit/test">
+                <Link href="/populace/checkPrivacyPolicy">
                     <span
-                        className={`nav-link ${props.currentPath === '/uikit/test' ? 'nav-link-active' : ''}`}
+                        className={`nav-link ${props.currentPath === '/populace/checkPrivacyPolicy' ? 'nav-link-active' : ''}`}
                         style={{ color: layoutConfig.colorScheme !== 'light' ? 'white' : 'black', margin: '0 16px' }}
                     >
-                        Test
+                        Check Privacy Policy
                     </span>
                 </Link>
             </div>
