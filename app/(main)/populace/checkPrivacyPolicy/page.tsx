@@ -4,10 +4,28 @@ import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import { Divider } from 'primereact/divider';
 import { Dialog } from 'primereact/dialog';
-import { Badge } from 'primereact/badge';
 import stringReplace from 'react-string-replace';
 import { PrimeIcons } from "primereact/api";
+import { ProgressSpinner } from 'primereact/progressspinner'; 
+import { TabView, TabPanel } from 'primereact/tabview'
 
+const iconStyleSuccess = {
+    color: 'white', 
+    backgroundColor: '#52b669', 
+    fontSize: '1.2em', 
+    borderRadius: '50%', 
+    padding: '0.2em',  
+    marginRight: '0.4em' 
+};
+
+const iconStyleDanger = {
+    color: 'white', 
+    backgroundColor: 'red', 
+    fontSize: '1.2em', 
+    borderRadius: '50%', 
+    padding: '0.2em',  
+    marginRight: '0.4em'
+};
 
 interface Company {
     company_name: string;
@@ -19,10 +37,30 @@ interface Law {
     title: string;
 }
 
+interface ReportCompliant {
+    amend: string;
+    legal: string;
+    section: string;
+    folder: string
+}
+
 interface Report {
-    GDPR_Violation: string;
+    Content_Items: string[];
     amend: string;
     section: string;
+    single_article: number;
+    compliant: ReportCompliant[];
+}
+
+interface CompanyComplianceQA {
+    compliance: boolean;
+    question: string;
+    reason: string;
+}
+
+interface ModifyRecommended {
+    section_after: string;
+    section_before: string;
 }
 
 
@@ -34,13 +72,22 @@ const CheckPrivacyPolicy = () => {
     const [selectCompanyUrl, setSelectCompanyUrl] = useState<string | null>(null);
     const [responseReport, setResponseReport] = useState<Report[]>([]);
     const [responsePrivacyPolicy, setResponsePrivacyPolicy] = useState<string | null>('');
+    const [modifyRecommended, setModifyRecommended] = useState<ModifyRecommended[]>([]);
     const [displayPrivacyPolicy, setDisplayPrivacyPolicy] = useState<ReactNode[]>([]);
+    const [companyComplianceQA, setCompanyComplianceQA] = useState<CompanyComplianceQA[]>([]);
+    const [companyComplianceQAErrorCount, setCompanyComplianceQAErrorCount] = useState<string>("0");
+
+    const [referenceCompanySection, setReferenceCompanySection] = useState<ReportCompliant[]>([]);
+    const [selectReferenceCountry, setSelectReferenceCountry] = useState<ReportCompliant | null>(null);
 
     const [isHighlightModalVisible, setHighlightIsModalVisible] = useState(false);
     const [isCheckListScoreModalVisible, setCheckListScoreModalVisible] = useState(false);
     
     const [modalContent, setModalContent] = useState<string>('');
     const [modalAmendment, setModalAmendment] = useState<string>('');
+    const [articleContents, setArticleContent] = useState<string[]>([]);
+
+    const [loading, setLoading] = useState(false); 
 
     const fetchCompanyPrivacyPolicy = async () => {
         try {
@@ -70,9 +117,17 @@ const CheckPrivacyPolicy = () => {
         }
     };
 
-    const handleConfirm = async () => {
+    const handleCheckConfirm = async () => {
+
+        setResponseReport([]);
+        setResponsePrivacyPolicy('');
+        setCompanyComplianceQA([])
+        setCompanyComplianceQAErrorCount("0")
+
         try {
             if (selectCompanyUrl && selectedLaw) {
+                setLoading(true);
+                
                 const request = {
                     url: selectCompanyUrl,
                     selected_law: selectedLaw.title
@@ -90,6 +145,8 @@ const CheckPrivacyPolicy = () => {
                     const data = await response.json();
                     setResponseReport(data.GDPR_report);
                     setResponsePrivacyPolicy(data.privacy_policy);
+                    setCompanyComplianceQA(data.company_compliance_QA)
+                    setCompanyComplianceQAErrorCount(data.company_compliance_check_false)
 
                     const highlight_text = highlightPrivacyPolicy(data.privacy_policy, data.GDPR_report);
                     setDisplayPrivacyPolicy(highlight_text);
@@ -102,13 +159,17 @@ const CheckPrivacyPolicy = () => {
             }
         }catch (error) {
             console.error("Error fetching chatbot response:", error);
+        }finally {
+            setLoading(false);
         }
     };
 
-    const handleHighlightClick = (section: string, violation: string, amendment: string) => {
-        setModalContent(violation);
-        setModalAmendment(amendment);
+    const handleHighlightClick = (report: Report) => {
+        setModalContent(report.section)
+        setModalAmendment(report.amend);
         setHighlightIsModalVisible(true);
+        setReferenceCompanySection(report.compliant);
+        setArticleContent(report.Content_Items)
     };
 
     const countryTemplate = (option: any) => {
@@ -151,7 +212,7 @@ const CheckPrivacyPolicy = () => {
                     ? stringReplace(chunk, report.section, (match, i) => (
                         <span
                             key={`${sectionIndex}-${chunkIndex}-${i}`}
-                            onClick={() => handleHighlightClick(report.section, report.GDPR_Violation, report.amend)}
+                            onClick={() => handleHighlightClick(report)}
                             className="highlighted-text"
                         >
                             {match}
@@ -176,6 +237,11 @@ const CheckPrivacyPolicy = () => {
         );
     };
 
+    const modifyRecommendedText = (text: string, modifyRecommended: Report[]): ReactNode[] => {
+
+    
+    }
+
     return (
         <div className="card" style={{fontSize: '1.3rem'}}>
             <div className="flex justify-content-between align-items-center">
@@ -186,8 +252,8 @@ const CheckPrivacyPolicy = () => {
                         options={companyList}  
                         optionLabel="company_name" 
                         editable 
-                        placeholder="Select a Company" 
-                        className="w-full w-3" 
+                        placeholder="Select a Company or Enter a Company Privacy Policy URL" 
+                        className="w-full w-4" 
                     />
                     <Dropdown
                         value={selectedLaw} 
@@ -199,44 +265,62 @@ const CheckPrivacyPolicy = () => {
                         className="w-full w-auto ml-2" 
                     />
                     <Button 
-                        label="確定" 
-                        icon="pi pi-check" 
+                        label="檢查模式" 
+                        icon="pi pi-check-circle"
                         className="ml-2 w-auto" 
-                        onClick={handleConfirm}
-                        disabled={!selectCompany || !selectedLaw}
+                        severity="success"
+                        onClick={handleCheckConfirm}
+                        disabled={!selectCompany || !selectedLaw || loading}
+                        outlined
+                    />
+                    <Button 
+                        label="修正模式" 
+                        icon="pi pi-pencil" 
+                        className="ml-2 w-auto" 
+                        // onClick={handleCheckConfirm('modifyMode')}
+                        disabled={!selectCompany || !selectedLaw || loading}
+                        outlined
                     />
                 </div>
-                <Button
-                    onClick={() => setCheckListScoreModalVisible(true)} // 當按下時，顯示彈出視窗
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        width: '45px',
-                        height: '45px',
-                        border: '5px solid red',
-                        borderRadius: '50%',
-                        marginLeft: 'auto',
-                        backgroundColor: 'transparent', // 使 Button 背景透明
-                        cursor: 'pointer' // 使滑鼠指標變成手型
-                    }}
-                >
-                    <span
+
+                <div>
+                    <Button 
+                        outlined 
+                        severity="danger"
+                        onClick={() => setCheckListScoreModalVisible(true)}
                         style={{
-                            color: 'red',
+                            width: '50px',  
+                            height: '50px',  
+                            borderRadius: '50%', 
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
                             fontSize: '15px',
                             fontWeight: 'bold',
+                            padding: 0, 
+                            transition: 'all 0.3s ease', // 添加過渡效果
+                            opacity: (!selectCompany || !selectedLaw || loading || !responseReport.length) ? '0.5' : '1', // 禁用時降低透明度
+                            cursor: (!selectCompany || !selectedLaw || loading || !responseReport.length) ? 'not-allowed' : 'pointer', // 禁用時改變鼠標樣式
+                            boxShadow: (!selectCompany || !selectedLaw || loading || !responseReport.length) ? 'none' : '0 2px 5px rgba(0,0,0,0.2)', // 禁用時移除陰影
+                            border: (!selectCompany || !selectedLaw || loading || !responseReport.length) ? '2px dashed #ccc' : '2px solid #f44336', // 禁用時改變邊框樣式
                         }}
+                        disabled={!selectCompany || !selectedLaw || loading || !responseReport.length}
                     >
-                        100
-                    </span>
-                </Button>
-
+                        {companyComplianceQAErrorCount}
+                    </Button>
+                </div>
             </div>
+
             <Divider className="mt-5 mb-5"></Divider>
-            <div className="flex justify-content-center">
+            <div className="flex justify-content-center align-items-start">
                 <div className="w-8" style={{ fontSize: '1.1em', lineHeight: '1.6' }}>
-                    {displayPrivacyPolicy}
+                    {loading ? (
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <ProgressSpinner style={{ width: '50px', height: '50px' }} />
+                        </div>
+                    ) : (
+                        displayPrivacyPolicy
+                    )}
                 </div>
             </div>
 
@@ -245,51 +329,80 @@ const CheckPrivacyPolicy = () => {
                 visible={isCheckListScoreModalVisible} 
                 style={{ width: '50vw', fontSize: '1.1em'}} 
                 onHide={() => setCheckListScoreModalVisible(false)}
-                blockScroll={false}  // 允許背景滾動
-                modal={false}        // 取消模態，使背景不會模糊
+                blockScroll={false} 
+                // modal={false}      
             >
-                <p style={{ display: 'flex', alignItems: 'center',  }}>
-                    <i 
-                        className={PrimeIcons.CHECK} 
-                        style={{
-                            color: 'white', 
-                            backgroundColor: 'green', 
-                            fontSize: '1.5em', 
-                            borderRadius: '50%', 
-                            padding: '0.3em',
-                            marginRight: '0.5em' // 添加右边距来与文本分开
-                        }}
-                    ></i> 
-                    .... q
-                </p>
-                <p style={{ display: 'flex', alignItems: 'center'}}>
-                    <i 
-                        className={PrimeIcons.TIMES} 
-                        style={{
-                            color: 'white', 
-                            backgroundColor: 'red', 
-                            fontSize: '1.5em', 
-                            borderRadius: '50%', 
-                            padding: '0.3em',
-                            marginRight: '0.5em' // 添加右边距来与文本分开
-                        }}
-                    ></i> 
-                    ....... q
-                </p>
+                <div>
+                    {companyComplianceQA ? companyComplianceQA.map((item, index) => (
+                        <p key={index} style={{ display: 'flex', alignItems: 'flex-start', fontSize: '1em' }}>
+                            <i className={item.compliance ? PrimeIcons.CHECK : PrimeIcons.TIMES} 
+                            style={{
+                                ...(item.compliance ? iconStyleSuccess : iconStyleDanger), 
+                                marginRight: '1em',
+                                marginTop: '0.2em' // 稍微調整圖標的垂直位置
+                            }} 
+                            />
+                            <div style={{ lineHeight: '1.4' }}>
+                                <p style={{ fontSize: '1.1em', fontWeight: 'bold', marginBottom: '0.3em' }}>{item.question}</p>
+                                <span style={{ fontSize: '0.9em', color: '#666', display: 'block' }}>{item.reason}</span>
+                            </div>
+                        </p>
+                    )) : null}
+                </div>
             </Dialog>
 
             <Dialog 
                 header={<span style={{ fontSize: '1.5rem' }}>詳細資訊</span>} 
                 visible={isHighlightModalVisible} 
-                style={{ width: '50vw' }} 
+                style={{ width: '50vw', fontSize:'1.2rem'}} 
                 modal 
-                onHide={() => setHighlightIsModalVisible(false)}
+                onHide={() => {
+                    setHighlightIsModalVisible(false);
+                    setModalContent('');
+                    setModalAmendment('');
+                    setSelectReferenceCountry(null);
+                }}
             >
-                <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>違規法條</h4>
-                <p>{modalContent}</p>
-                <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>修正建議</h4>
-                <p>{modalAmendment}</p>
+                <TabView>
+                    <TabPanel header="修正建議">
+                        <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '1rem' }}>
+                            <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>條款原文</h4>
+                            <p>{modalContent}</p>
+                            <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>修正建議</h4>
+                            <p>{modalAmendment}</p>
+                            <div>
+                                <Divider />
+                                <label htmlFor="referenceCompany" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1.1rem' }}>選取參考公司</label>
+                                <Dropdown 
+                                    value={selectReferenceCountry} 
+                                    onChange={(e) => setSelectReferenceCountry(e.value)} 
+                                    options={referenceCompanySection} 
+                                    optionLabel="folder" 
+                                    placeholder="Select a Country" 
+                                    filter 
+                                    className="w-full " 
+                                />
+
+                                <p className="mt-5">
+                                    { selectReferenceCountry ? selectReferenceCountry.section : ''}
+                                </p>
+                            </div>
+                        </div>
+                    </TabPanel>
+
+                    <TabPanel header={selectedLaw ? `${selectedLaw.title} 原文` : ""}>
+                        <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '1rem' }}>
+                            <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>
+                                {selectedLaw ? `${selectedLaw.title} 原文` : ""}
+                            </h4>
+                            {articleContents.map((articleContent, index) => (
+                                <p key={index}>{articleContent}</p>
+                            ))}
+                        </div>
+                    </TabPanel>
+                </TabView>
             </Dialog>
+
         </div>
     );
 };
