@@ -390,7 +390,7 @@ const CheckPrivacyPolicy = () => {
             </div>
 
             <Divider className="mt-5 mb-5"></Divider>
-            <div className="flex justify-content-center align-items-start">
+            <div className="flex justify-content-center align-items-center">
                 <Button 
                     label="檢查模式" 
                     icon="pi pi-search" 
@@ -403,8 +403,13 @@ const CheckPrivacyPolicy = () => {
                 <div className="w-8" style={{ fontSize: '1.1em', lineHeight: '1.6' }}>
                     {loading ? (
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                            <ProgressBar value={loadingValue} displayValueTemplate={progressBarValueTemplate}></ProgressBar>
-                            <ProgressSpinner style={{ width: '50px', height: '50px' }} />
+                            <div className="flex w-10">
+                                <ProgressBar 
+                                    value={loadingValue} 
+                                    displayValueTemplate={progressBarValueTemplate} 
+                                    style={{ width: '80%', marginTop: '1rem' }}></ProgressBar>
+                                <ProgressSpinner style={{ height: '50px' , marginLeft: '20px' }} />
+                            </div>
                         </div>
                     ) : (
                         displayPrivacyPolicy
@@ -423,7 +428,7 @@ const CheckPrivacyPolicy = () => {
 
 
             <Dialog 
-                header="檢查清單" 
+                header="修正建議" 
                 visible={isCheckListScoreModalVisible} 
                 style={{ width: '50vw', fontSize: '1.1em'}} 
                 onHide={() => setCheckListScoreModalVisible(false)}
@@ -462,13 +467,13 @@ const CheckPrivacyPolicy = () => {
                 <TabView>
                     <TabPanel header="修正建議">
                         <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '1rem', fontSize: '1.1rem' }}>
-                            <h4 style={{ fontSize: '1.5rem', fontFamily: 'inherit', fontWeight: '600' }}>條款原文</h4>
+                            <h4 style={{ fontSize: '1.5rem', fontFamily: 'inherit', fontWeight: '600' }}>隱私政策原文</h4>
                             <p>{currentResponseReport?.section}</p>
                             <h4 style={{ fontSize: '1.5rem', fontFamily: 'inherit', fontWeight: '600' }}>修正建議</h4>
                             <p>{currentResponseReport?.amend}</p>
                             <div>
                                 <Divider />
-                                <h4 style={{ fontSize: '1.5rem', fontFamily: 'inherit', fontWeight: '600' }}>選取參考公司</h4>
+                                <h4 style={{ fontSize: '1.5rem', fontFamily: 'inherit', fontWeight: '600' }}>選擇參考公司</h4>
                                 <Dropdown 
                                     value={selectReferenceCountry} 
                                     onChange={(e) => setSelectReferenceCountry(e.value)} 
@@ -478,16 +483,14 @@ const CheckPrivacyPolicy = () => {
                                     filter 
                                     className="w-full " 
                                 />
-                                <p className="mt-5" style={{ fontSize: '1.3rem', color: '#171717', fontWeight: 'bold' }}>
-                                    選擇參考公司的示範：
-                                </p>
+                                <p className="mt-5" style={{ fontSize: '1.3rem', color: '#171717', fontWeight: 'bold' }}> 所選參考公司的示範： </p>
                                 <p style={{ fontSize: '1.2rem' }}>
                                     {selectReferenceCountry ? selectReferenceCountry.section : 'NONE'}
                                 </p>
                             </div>
                         </div>
                     </TabPanel>
-                    <TabPanel header={selectedLaw ? `${selectedLaw.title} 原文` : ""}>
+                    <TabPanel header={selectedLaw ? `${selectedLaw.title}` : ""}>
                         <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '1rem' }}>
                             <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>
                                 {selectedLaw ? `Art. ${currentResponseReport?.single_article} (${selectedLaw.title}) Conditions for consent` : ""}
