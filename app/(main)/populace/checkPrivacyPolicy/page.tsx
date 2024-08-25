@@ -4,7 +4,10 @@ import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import { Divider } from 'primereact/divider';
 import { Dialog } from 'primereact/dialog';
+import { Badge } from 'primereact/badge';
 import stringReplace from 'react-string-replace';
+import { PrimeIcons } from "primereact/api";
+
 
 interface Company {
     company_name: string;
@@ -32,7 +35,10 @@ const CheckPrivacyPolicy = () => {
     const [responseReport, setResponseReport] = useState<Report[]>([]);
     const [responsePrivacyPolicy, setResponsePrivacyPolicy] = useState<string | null>('');
     const [displayPrivacyPolicy, setDisplayPrivacyPolicy] = useState<ReactNode[]>([]);
-    const [isModalVisible, setIsModalVisible] = useState(false);
+
+    const [isHighlightModalVisible, setHighlightIsModalVisible] = useState(false);
+    const [isCheckListScoreModalVisible, setCheckListScoreModalVisible] = useState(false);
+    
     const [modalContent, setModalContent] = useState<string>('');
     const [modalAmendment, setModalAmendment] = useState<string>('');
 
@@ -102,7 +108,7 @@ const CheckPrivacyPolicy = () => {
     const handleHighlightClick = (section: string, violation: string, amendment: string) => {
         setModalContent(violation);
         setModalAmendment(amendment);
-        setIsModalVisible(true);
+        setHighlightIsModalVisible(true);
     };
 
     const countryTemplate = (option: any) => {
@@ -200,7 +206,8 @@ const CheckPrivacyPolicy = () => {
                         disabled={!selectCompany || !selectedLaw}
                     />
                 </div>
-                <div 
+                <Button
+                    onClick={() => setCheckListScoreModalVisible(true)} // 當按下時，顯示彈出視窗
                     style={{
                         display: 'flex',
                         justifyContent: 'center',
@@ -209,7 +216,9 @@ const CheckPrivacyPolicy = () => {
                         height: '45px',
                         border: '5px solid red',
                         borderRadius: '50%',
-                        marginLeft: 'auto',  // 保持這一行
+                        marginLeft: 'auto',
+                        backgroundColor: 'transparent', // 使 Button 背景透明
+                        cursor: 'pointer' // 使滑鼠指標變成手型
                     }}
                 >
                     <span
@@ -221,7 +230,8 @@ const CheckPrivacyPolicy = () => {
                     >
                         100
                     </span>
-                </div>
+                </Button>
+
             </div>
             <Divider className="mt-5 mb-5"></Divider>
             <div className="flex justify-content-center">
@@ -229,12 +239,51 @@ const CheckPrivacyPolicy = () => {
                     {displayPrivacyPolicy}
                 </div>
             </div>
+
+            <Dialog 
+                header="檢查清單" 
+                visible={isCheckListScoreModalVisible} 
+                style={{ width: '50vw', fontSize: '1.1em'}} 
+                onHide={() => setCheckListScoreModalVisible(false)}
+                blockScroll={false}  // 允許背景滾動
+                modal={false}        // 取消模態，使背景不會模糊
+            >
+                <p style={{ display: 'flex', alignItems: 'center',  }}>
+                    <i 
+                        className={PrimeIcons.CHECK} 
+                        style={{
+                            color: 'white', 
+                            backgroundColor: 'green', 
+                            fontSize: '1.5em', 
+                            borderRadius: '50%', 
+                            padding: '0.3em',
+                            marginRight: '0.5em' // 添加右边距来与文本分开
+                        }}
+                    ></i> 
+                    .... q
+                </p>
+                <p style={{ display: 'flex', alignItems: 'center'}}>
+                    <i 
+                        className={PrimeIcons.TIMES} 
+                        style={{
+                            color: 'white', 
+                            backgroundColor: 'red', 
+                            fontSize: '1.5em', 
+                            borderRadius: '50%', 
+                            padding: '0.3em',
+                            marginRight: '0.5em' // 添加右边距来与文本分开
+                        }}
+                    ></i> 
+                    ....... q
+                </p>
+            </Dialog>
+
             <Dialog 
                 header={<span style={{ fontSize: '1.5rem' }}>詳細資訊</span>} 
-                visible={isModalVisible} 
+                visible={isHighlightModalVisible} 
                 style={{ width: '50vw' }} 
                 modal 
-                onHide={() => setIsModalVisible(false)}
+                onHide={() => setHighlightIsModalVisible(false)}
             >
                 <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>違規法條</h4>
                 <p>{modalContent}</p>
