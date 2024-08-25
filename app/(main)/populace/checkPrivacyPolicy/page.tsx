@@ -71,6 +71,7 @@ const CheckPrivacyPolicy = () => {
     const [selectCompany, setSelectCompany] = useState<string | null>(null);
     const [selectCompanyUrl, setSelectCompanyUrl] = useState<string | null>(null);
     const [responseReport, setResponseReport] = useState<Report[]>([]);
+    const [currentResponseReport, setCurrentResponseReport] = useState<Report | null>(null);
     const [responsePrivacyPolicy, setResponsePrivacyPolicy] = useState<string | null>('');
     const [modifyRecommended, setModifyRecommended] = useState<ModifyRecommended[]>([]);
     const [displayPrivacyPolicy, setDisplayPrivacyPolicy] = useState<ReactNode[]>([]);
@@ -80,12 +81,13 @@ const CheckPrivacyPolicy = () => {
     const [referenceCompanySection, setReferenceCompanySection] = useState<ReportCompliant[]>([]);
     const [selectReferenceCountry, setSelectReferenceCountry] = useState<ReportCompliant | null>(null);
 
+    const [displayCheckHighlightText, setDisplayCheckHighlightText] = useState<ReactNode[]>([]);
+    const [displayModifyHighlightText, setDisplayModifyHighlightText] = useState<ReactNode[]>([]);
+
     const [isHighlightModalVisible, setHighlightIsModalVisible] = useState(false);
     const [isCheckListScoreModalVisible, setCheckListScoreModalVisible] = useState(false);
-    
-    const [modalContent, setModalContent] = useState<string>('');
-    const [modalAmendment, setModalAmendment] = useState<string>('');
-    const [articleContents, setArticleContent] = useState<string[]>([]);
+
+    const [currentDisplayMode, setCurrentDisplayMode] = useState<string>("check");
 
     const [loading, setLoading] = useState(false); 
 
@@ -117,7 +119,7 @@ const CheckPrivacyPolicy = () => {
         }
     };
 
-    const handleCheckConfirm = async () => {
+    const handleConfirm = async () => {
 
         setResponseReport([]);
         setResponsePrivacyPolicy('');
@@ -133,7 +135,31 @@ const CheckPrivacyPolicy = () => {
                     selected_law: selectedLaw.title
                 };
 
-                const response = await fetch("http://140.115.54.33:5469/submit_ai_act_form", {
+                // Check Mode
+                const checkResponse = await fetch("http://140.115.54.33:5469/submit_ai_act_form", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(request),
+                });
+                if (checkResponse.ok) {
+                    const data = await checkResponse.json();
+                    setResponseReport(data.GDPR_report);
+                    setResponsePrivacyPolicy(data.privacy_policy);
+                    setCompanyComplianceQA(data.company_compliance_QA)
+                    setCompanyComplianceQAErrorCount(data.company_compliance_check_false)
+
+                    const highlight_text = highlightPrivacyPolicy(data.privacy_policy, data.GDPR_report);
+                    setDisplayCheckHighlightText(highlight_text);
+                    setDisplayPrivacyPolicy(highlight_text); // 預設呈現畫面是檢查
+                    
+                } else {
+                    console.error("Failed to fetch chatbot response");
+                }
+
+                // Modify Mode
+                const ModifyResponse = await fetch("http://140.115.54.33:5469/update_section", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -141,15 +167,11 @@ const CheckPrivacyPolicy = () => {
                     body: JSON.stringify(request),
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    setResponseReport(data.GDPR_report);
-                    setResponsePrivacyPolicy(data.privacy_policy);
-                    setCompanyComplianceQA(data.company_compliance_QA)
-                    setCompanyComplianceQAErrorCount(data.company_compliance_check_false)
+                if (ModifyResponse.ok) {
+                    const data = await ModifyResponse.json();
 
-                    const highlight_text = highlightPrivacyPolicy(data.privacy_policy, data.GDPR_report);
-                    setDisplayPrivacyPolicy(highlight_text);
+                    const modify_text = modifyRecommendedText(data.privacy_policy, data.modified_sections);
+                    setDisplayModifyHighlightText(modify_text);
                     
                 } else {
                     console.error("Failed to fetch chatbot response");
@@ -162,14 +184,6 @@ const CheckPrivacyPolicy = () => {
         }finally {
             setLoading(false);
         }
-    };
-
-    const handleHighlightClick = (report: Report) => {
-        setModalContent(report.section)
-        setModalAmendment(report.amend);
-        setHighlightIsModalVisible(true);
-        setReferenceCompanySection(report.compliant);
-        setArticleContent(report.Content_Items)
     };
 
     const countryTemplate = (option: any) => {
@@ -212,7 +226,10 @@ const CheckPrivacyPolicy = () => {
                     ? stringReplace(chunk, report.section, (match, i) => (
                         <span
                             key={`${sectionIndex}-${chunkIndex}-${i}`}
-                            onClick={() => handleHighlightClick(report)}
+                            onClick={() => {
+                                setCurrentResponseReport(report);
+                                setHighlightIsModalVisible(true);
+                            }}
                             className="highlighted-text"
                         >
                             {match}
@@ -237,9 +254,49 @@ const CheckPrivacyPolicy = () => {
         );
     };
 
-    const modifyRecommendedText = (text: string, modifyRecommended: Report[]): ReactNode[] => {
-
+    const modifyRecommendedText = (text: string, modifyRecommended: ModifyRecommended[]): ReactNode[] => {
+        let formattedText = text.replace(/\n/g, '<br />');
+        let modifiedText: ReactNode[] = [formattedText];
     
+        modifyRecommended.forEach((modifyItem, index) => {
+            modifiedText = modifiedText.map((chunk, chunkIndex) =>
+                typeof chunk === 'string'
+                    ? stringReplace(chunk, modifyItem.section_before, (match, i) => (
+                        <React.Fragment key={`${index}-${chunkIndex}-${i}`}>
+                            <span style={{ color: 'red', textDecoration: 'line-through' }}>
+                                {match}
+                            </span>
+                            <span style={{ color: 'green', marginLeft: '0.5em' }}>
+                                {modifyItem.section_after}
+                            </span>
+                        </React.Fragment>
+                    ))
+                    : chunk
+            ).flat();
+        });
+    
+        // 處理 <br /> 標籤，使其正確渲染為換行
+        return modifiedText.map((textChunk, i) => 
+            typeof textChunk === 'string' ? (
+                textChunk.split('<br />').map((line, index) => (
+                    <React.Fragment key={`${i}-${index}`}>
+                        {line}
+                        {index < textChunk.split('<br />').length - 1 && <br />}
+                    </React.Fragment>
+                ))
+            ) : (
+                textChunk
+            )
+        );
+    };
+
+    const changeDisplayMode = (mode: string) => {
+        setCurrentDisplayMode(mode);
+        if (mode === 'check') {
+            setDisplayPrivacyPolicy(displayCheckHighlightText);
+        } else if (mode === 'modify') {
+            setDisplayPrivacyPolicy(displayModifyHighlightText);
+        }
     }
 
     return (
@@ -254,6 +311,7 @@ const CheckPrivacyPolicy = () => {
                         editable 
                         placeholder="Select a Company or Enter a Company Privacy Policy URL" 
                         className="w-full w-4" 
+                        disabled={loading}
                     />
                     <Dropdown
                         value={selectedLaw} 
@@ -263,22 +321,23 @@ const CheckPrivacyPolicy = () => {
                         placeholder="Select a Law" 
                         itemTemplate={countryTemplate} 
                         className="w-full w-auto ml-2" 
+                        disabled={loading}
                     />
                     <Button 
-                        label="檢查模式" 
+                        label="確認" 
                         icon="pi pi-check-circle"
                         className="ml-2 w-auto" 
                         severity="success"
-                        onClick={handleCheckConfirm}
+                        onClick={handleConfirm}
                         disabled={!selectCompany || !selectedLaw || loading}
                         outlined
                     />
                     <Button 
-                        label="修正模式" 
-                        icon="pi pi-pencil" 
+                        label="下載" 
+                        icon="pi pi-download"
                         className="ml-2 w-auto" 
-                        // onClick={handleCheckConfirm('modifyMode')}
-                        disabled={!selectCompany || !selectedLaw || loading}
+                        severity="secondary" 
+                        disabled={true}
                         outlined
                     />
                 </div>
@@ -313,6 +372,15 @@ const CheckPrivacyPolicy = () => {
 
             <Divider className="mt-5 mb-5"></Divider>
             <div className="flex justify-content-center align-items-start">
+                <Button 
+                    label="檢查模式" 
+                    icon="pi pi-search" 
+                    className="mr-5 w-auto" 
+                    severity="info" 
+                    onClick={(e) => changeDisplayMode('check')}
+                    disabled={!selectCompany || !selectedLaw || loading}
+                    outlined
+                />
                 <div className="w-8" style={{ fontSize: '1.1em', lineHeight: '1.6' }}>
                     {loading ? (
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -322,7 +390,17 @@ const CheckPrivacyPolicy = () => {
                         displayPrivacyPolicy
                     )}
                 </div>
+                <Button 
+                    label="修正模式" 
+                    icon="pi pi-pencil" 
+                    className="ml-5 w-auto" 
+                    severity="warning" 
+                    onClick={(e) => changeDisplayMode('modify')}
+                    disabled={!selectCompany || !selectedLaw || loading}
+                    outlined
+                />
             </div>
+
 
             <Dialog 
                 header="檢查清單" 
@@ -339,7 +417,7 @@ const CheckPrivacyPolicy = () => {
                             style={{
                                 ...(item.compliance ? iconStyleSuccess : iconStyleDanger), 
                                 marginRight: '1em',
-                                marginTop: '0.2em' // 稍微調整圖標的垂直位置
+                                marginTop: '0.2em'
                             }} 
                             />
                             <div style={{ lineHeight: '1.4' }}>
@@ -358,46 +436,46 @@ const CheckPrivacyPolicy = () => {
                 modal 
                 onHide={() => {
                     setHighlightIsModalVisible(false);
-                    setModalContent('');
-                    setModalAmendment('');
                     setSelectReferenceCountry(null);
                 }}
             >
                 <TabView>
                     <TabPanel header="修正建議">
-                        <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '1rem' }}>
-                            <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>條款原文</h4>
-                            <p>{modalContent}</p>
-                            <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>修正建議</h4>
-                            <p>{modalAmendment}</p>
+                        <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '1rem', fontSize: '1.1rem' }}>
+                            <h4 style={{ fontSize: '1.5rem', fontFamily: 'inherit', fontWeight: '600' }}>條款原文</h4>
+                            <p>{currentResponseReport?.section}</p>
+                            <h4 style={{ fontSize: '1.5rem', fontFamily: 'inherit', fontWeight: '600' }}>修正建議</h4>
+                            <p>{currentResponseReport?.amend}</p>
                             <div>
                                 <Divider />
-                                <label htmlFor="referenceCompany" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1.1rem' }}>選取參考公司</label>
+                                <h4 style={{ fontSize: '1.5rem', fontFamily: 'inherit', fontWeight: '600' }}>選取參考公司</h4>
                                 <Dropdown 
                                     value={selectReferenceCountry} 
                                     onChange={(e) => setSelectReferenceCountry(e.value)} 
-                                    options={referenceCompanySection} 
+                                    options={currentResponseReport?.compliant} 
                                     optionLabel="folder" 
                                     placeholder="Select a Country" 
                                     filter 
                                     className="w-full " 
                                 />
-
-                                <p className="mt-5">
-                                    { selectReferenceCountry ? selectReferenceCountry.section : ''}
+                                <p className="mt-5" style={{ fontSize: '1.3rem', color: '#171717', fontWeight: 'bold' }}>
+                                    以下是參考公司的條款：
+                                </p>
+                                <p style={{ fontSize: '1.2rem' }}>
+                                    {selectReferenceCountry ? selectReferenceCountry.section : 'NONE'}
                                 </p>
                             </div>
                         </div>
                     </TabPanel>
-
                     <TabPanel header={selectedLaw ? `${selectedLaw.title} 原文` : ""}>
                         <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '1rem' }}>
                             <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>
-                                {selectedLaw ? `${selectedLaw.title} 原文` : ""}
+                                {selectedLaw ? `Art. ${currentResponseReport?.single_article} (${selectedLaw.title}) Conditions for consent` : ""}
                             </h4>
-                            {articleContents.map((articleContent, index) => (
+                            {currentResponseReport?.Content_Items.map((articleContent, index) => (
                                 <p key={index}>{articleContent}</p>
                             ))}
+
                         </div>
                     </TabPanel>
                 </TabView>
