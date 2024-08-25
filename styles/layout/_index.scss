@@ -8,3 +8,72 @@
     background-color: #FFD700;
     transform: scale(1.05);
 }
+
+$color-primary-darker: #001a61;
+$color-primary-dark: #00258e;
+$color-primary: #3559b2;
+$color-primary-light: #6786cc;
+$color-primary-lighter: #9bb3e6;
+
+
+// 定義顏色變量
+$color-primary-darker: #001a61;
+$color-primary-dark: #00258e;
+$color-primary: #3559b2;
+$color-primary-light: #6786cc;
+$color-primary-lighter: #9bb3e6;
+
+// 統一樣式
+.button-custom {
+  width: 100px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 15px;
+  font-weight: bold;
+  padding: 0;
+  transition: all 0.3s ease;
+  color: #fff;
+
+  // darker 樣式
+  &.darker {
+    border-color: $color-primary-darker;
+    background-color: $color-primary-darker;
+  }
+
+  // dark 樣式
+  &.dark {
+    border-color: $color-primary-dark;
+    background-color: $color-primary-dark;
+  }
+
+  // primary 樣式
+  &.primary {
+    border-color: $color-primary;
+    background-color: $color-primary;
+  }
+
+  // light 樣式
+  &.light {
+    border-color: $color-primary-light;
+    background-color: $color-primary-light;
+  }
+
+  // lighter 樣式
+  &.lighter {
+    border-color: $color-primary-lighter;
+    background-color: $color-primary-lighter;
+  }
+
+  // 禁用狀態
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+    border: 2px dashed #ccc;
+    background-color: #ccc;
+    color: #fff;
+  }
+}

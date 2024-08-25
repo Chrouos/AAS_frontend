@@ -346,22 +346,21 @@ const CheckPrivacyPolicy = () => {
                         label="確認" 
                         icon="pi pi-check-circle"
                         className="ml-2 w-auto" 
-                        severity="success"
+                        severity="secondary"
                         onClick={handleConfirm}
                         disabled={!selectCompany || !selectedLaw || loading}
-                        outlined
-                    />
-                    <Button 
-                        label="下載" 
-                        icon="pi pi-download"
-                        className="ml-2 w-auto" 
-                        severity="secondary" 
-                        disabled={true}
                         outlined
                     />
                 </div>
 
                 <div>
+                    
+                </div>
+            </div>
+
+            <Divider className="mt-5 mb-5"></Divider>
+            <div className="flex justify-content-center ">
+                <div className="flex flex-column gap-4  align-items-center ml-5 mr-5 w-2">
                     <Button 
                         outlined 
                         severity="danger"
@@ -386,44 +385,48 @@ const CheckPrivacyPolicy = () => {
                     >
                         {companyComplianceQAErrorCount}
                     </Button>
+                    
+                    <Button 
+                        label="檢查模式" 
+                        icon="pi pi-search" 
+                        className="w-10 color-primary-darker" 
+                        onClick={(e) => changeDisplayMode('check')}
+                        disabled={!selectCompany || !selectedLaw || loading}
+                        outlined
+                    />
+                    <Button 
+                        label="修正模式" 
+                        icon="pi pi-pencil" 
+                        className="w-10" 
+                        severity="warning" 
+                        onClick={(e) => changeDisplayMode('modify')}
+                        disabled={!selectCompany || !selectedLaw || loading}
+                        outlined
+                    />
+                    <Button 
+                        label="下載" 
+                        icon="pi pi-download"
+                        className="ml-2 w-10" 
+                        severity="success" 
+                        disabled={true}
+                        outlined
+                    />
                 </div>
-            </div>
-
-            <Divider className="mt-5 mb-5"></Divider>
-            <div className="flex justify-content-center align-items-center">
-                <Button 
-                    label="檢查模式" 
-                    icon="pi pi-search" 
-                    className="mr-5 w-auto" 
-                    severity="info" 
-                    onClick={(e) => changeDisplayMode('check')}
-                    disabled={!selectCompany || !selectedLaw || loading}
-                    outlined
-                />
                 <div className="w-8" style={{ fontSize: '1.1em', lineHeight: '1.6' }}>
                     {loading ? (
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                            <div className="flex w-10">
-                                <ProgressBar 
-                                    value={loadingValue} 
-                                    displayValueTemplate={progressBarValueTemplate} 
-                                    style={{ width: '80%', marginTop: '1rem' }}></ProgressBar>
-                                <ProgressSpinner style={{ height: '50px' , marginLeft: '20px' }} />
-                            </div>
+                            <ProgressBar 
+                                value={loadingValue} 
+                                displayValueTemplate={progressBarValueTemplate} 
+                                style={{ width: '70%', marginTop: '1rem' }}></ProgressBar>
+                            <ProgressSpinner style={{ width: '50px', height: '50px' , marginLeft: '20px' }} />
+
                         </div>
                     ) : (
                         displayPrivacyPolicy
                     )}
                 </div>
-                <Button 
-                    label="修正模式" 
-                    icon="pi pi-pencil" 
-                    className="ml-5 w-auto" 
-                    severity="warning" 
-                    onClick={(e) => changeDisplayMode('modify')}
-                    disabled={!selectCompany || !selectedLaw || loading}
-                    outlined
-                />
+                
             </div>
 
 
