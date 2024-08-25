@@ -8,6 +8,7 @@ import stringReplace from 'react-string-replace';
 import { PrimeIcons } from "primereact/api";
 import { ProgressSpinner } from 'primereact/progressspinner'; 
 import { TabView, TabPanel } from 'primereact/tabview'
+import { ProgressBar } from 'primereact/progressbar';
 
 const iconStyleSuccess = {
     color: 'white', 
@@ -309,6 +310,14 @@ const CheckPrivacyPolicy = () => {
         setLoading(loadingStatus);
     }
 
+    const progressBarValueTemplate = (value: string) => {
+        return (
+            <React.Fragment>
+                {value}/<b>100</b>
+            </React.Fragment>
+        );
+    };
+
     return (
         <div className="card" style={{fontSize: '1.3rem'}}>
             <div className="flex justify-content-between align-items-center">
@@ -394,6 +403,7 @@ const CheckPrivacyPolicy = () => {
                 <div className="w-8" style={{ fontSize: '1.1em', lineHeight: '1.6' }}>
                     {loading ? (
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <ProgressBar value={loadingValue} displayValueTemplate={progressBarValueTemplate}></ProgressBar>
                             <ProgressSpinner style={{ width: '50px', height: '50px' }} />
                         </div>
                     ) : (
@@ -469,7 +479,7 @@ const CheckPrivacyPolicy = () => {
                                     className="w-full " 
                                 />
                                 <p className="mt-5" style={{ fontSize: '1.3rem', color: '#171717', fontWeight: 'bold' }}>
-                                    以下是參考公司的條款：
+                                    選擇參考公司的示範：
                                 </p>
                                 <p style={{ fontSize: '1.2rem' }}>
                                     {selectReferenceCountry ? selectReferenceCountry.section : 'NONE'}
@@ -485,7 +495,6 @@ const CheckPrivacyPolicy = () => {
                             {currentResponseReport?.Content_Items.map((articleContent, index) => (
                                 <p key={index}>{articleContent}</p>
                             ))}
-
                         </div>
                     </TabPanel>
                 </TabView>
