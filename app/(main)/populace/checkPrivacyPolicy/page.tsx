@@ -90,6 +90,7 @@ const CheckPrivacyPolicy = () => {
     const [currentDisplayMode, setCurrentDisplayMode] = useState<string>("check");
 
     const [loading, setLoading] = useState(false); 
+    const [loadingValue, setLoadingValue] = useState(0);
 
     const fetchCompanyPrivacyPolicy = async () => {
         try {
@@ -128,7 +129,7 @@ const CheckPrivacyPolicy = () => {
 
         try {
             if (selectCompanyUrl && selectedLaw) {
-                setLoading(true);
+                setLoadingStatus(true, 0)
                 
                 const request = {
                     url: selectCompanyUrl,
@@ -143,6 +144,7 @@ const CheckPrivacyPolicy = () => {
                     },
                     body: JSON.stringify(request),
                 });
+
                 if (checkResponse.ok) {
                     const data = await checkResponse.json();
                     setResponseReport(data.GDPR_report);
@@ -153,10 +155,12 @@ const CheckPrivacyPolicy = () => {
                     const highlight_text = highlightPrivacyPolicy(data.privacy_policy, data.GDPR_report);
                     setDisplayCheckHighlightText(highlight_text);
                     setDisplayPrivacyPolicy(highlight_text); // 預設呈現畫面是檢查
+                    setLoadingStatus(true, 50)
                     
                 } else {
                     console.error("Failed to fetch chatbot response");
                 }
+
 
                 // Modify Mode
                 const ModifyResponse = await fetch("http://140.115.54.33:5469/update_section", {
@@ -172,7 +176,7 @@ const CheckPrivacyPolicy = () => {
 
                     const modify_text = modifyRecommendedText(data.privacy_policy, data.modified_sections);
                     setDisplayModifyHighlightText(modify_text);
-                    
+                    setLoadingStatus(true, 80)
                 } else {
                     console.error("Failed to fetch chatbot response");
                 }
@@ -183,6 +187,7 @@ const CheckPrivacyPolicy = () => {
             console.error("Error fetching chatbot response:", error);
         }finally {
             setLoading(false);
+            setLoadingStatus(false, 100)
         }
     };
 
@@ -297,6 +302,11 @@ const CheckPrivacyPolicy = () => {
         } else if (mode === 'modify') {
             setDisplayPrivacyPolicy(displayModifyHighlightText);
         }
+    }
+
+    const setLoadingStatus = (loadingStatus: boolean, value: number) => {
+        setLoadingValue(value);
+        setLoading(loadingStatus);
     }
 
     return (
