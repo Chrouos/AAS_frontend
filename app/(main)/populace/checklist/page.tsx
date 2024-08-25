@@ -91,9 +91,7 @@ const CheckList = () => {
     };
 
     const handleNextQuestion = () => {
-        if (currentQuestionIndex < questions.length - 1 && currentQuestionIndex < answeredQuestionsCount) {
-            setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
-        }
+        setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
         if(currentQuestionIndex < answeredQuestionsCount){
             setChatBotResponse("目前還未送出問題");
         }

@@ -44,6 +44,15 @@ const AppTopbar = forwardRef<AppTopbarRef, AppTopbarProps>((props, ref) => {
                         Check Privacy Policy
                     </span>
                 </Link>
+
+                <Link href="/populace/test">
+                    <span
+                        className={`nav-link ${props.currentPath === '/populace/test' ? 'nav-link-active' : ''}`}
+                        style={{ color: layoutConfig.colorScheme !== 'light' ? 'white' : 'black', margin: '0 16px' }}
+                    >
+                        Test
+                    </span>
+                </Link>
             </div>
         </div>
     );
