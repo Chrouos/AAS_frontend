@@ -88,7 +88,7 @@ const CheckPrivacyPolicy = () => {
     const [isHighlightModalVisible, setHighlightIsModalVisible] = useState(false);
     const [isCheckListScoreModalVisible, setCheckListScoreModalVisible] = useState(false);
 
-    const [currentDisplayMode, setCurrentDisplayMode] = useState<string>("check");
+    const [currentDisplayMode, setCurrentDisplayMode] = useState<string>("");
 
     const [loading, setLoading] = useState(false); 
     const [loadingValue, setLoadingValue] = useState(0);
@@ -130,7 +130,7 @@ const CheckPrivacyPolicy = () => {
 
         try {
             if (selectCompanyUrl && selectedLaw) {
-                setLoadingStatus(true, 0)
+                setLoadingStatus(true, 10)
                 
                 const request = {
                     url: selectCompanyUrl,
@@ -145,6 +145,7 @@ const CheckPrivacyPolicy = () => {
                     },
                     body: JSON.stringify(request),
                 });
+                setLoadingStatus(true, 20)
 
                 if (checkResponse.ok) {
                     const data = await checkResponse.json();
@@ -156,7 +157,7 @@ const CheckPrivacyPolicy = () => {
                     const highlight_text = highlightPrivacyPolicy(data.privacy_policy, data.GDPR_report);
                     setDisplayCheckHighlightText(highlight_text);
                     setDisplayPrivacyPolicy(highlight_text); // 預設呈現畫面是檢查
-                    setLoadingStatus(true, 50)
+                    setLoadingStatus(true, 40)
                     
                 } else {
                     console.error("Failed to fetch chatbot response");
@@ -171,6 +172,8 @@ const CheckPrivacyPolicy = () => {
                     },
                     body: JSON.stringify(request),
                 });
+                setLoadingStatus(true, 60)
+
 
                 if (ModifyResponse.ok) {
                     const data = await ModifyResponse.json();
@@ -184,11 +187,12 @@ const CheckPrivacyPolicy = () => {
             } else {
                 console.log("No company or law selected.");
             }
-        }catch (error) {
+        } catch (error) {
             console.error("Error fetching chatbot response:", error);
-        }finally {
+        } finally {
             setLoading(false);
             setLoadingStatus(false, 100)
+            setCurrentDisplayMode('check')
         }
     };
 
@@ -328,7 +332,7 @@ const CheckPrivacyPolicy = () => {
                         options={companyList}  
                         optionLabel="company_name" 
                         editable 
-                        placeholder="Select a Company or Enter a Company Privacy Policy URL" 
+                        placeholder="輸入公司隱私政策 PDF / URL" 
                         className="w-full w-4" 
                         disabled={loading}
                     />
@@ -337,7 +341,7 @@ const CheckPrivacyPolicy = () => {
                         options={lawList} 
                         onChange={(e) => setSelectedLaw(e.value)} 
                         optionLabel="title" 
-                        placeholder="Select a Law" 
+                        placeholder="選擇法律" 
                         itemTemplate={countryTemplate} 
                         className="w-full w-auto ml-2" 
                         disabled={loading}
@@ -352,30 +356,26 @@ const CheckPrivacyPolicy = () => {
                         outlined
                     />
                 </div>
-
-                <div>
-                    
-                </div>
             </div>
 
             <Divider className="mt-5 mb-5"></Divider>
             <div className="flex justify-content-center ">
-                <div className="flex flex-column gap-4  align-items-center ml-5 mr-5 w-2">
+                <div className="flex flex-column gap-4  align-items-center mr-6 w-2">
                     <Button 
                         outlined 
                         severity="danger"
                         onClick={() => setCheckListScoreModalVisible(true)}
                         style={{
-                            width: '50px',  
-                            height: '50px',  
+                            width: '70px',  
+                            height: '70px',  
                             borderRadius: '50%', 
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            fontSize: '15px',
+                            fontSize: '20px',
                             fontWeight: 'bold',
                             padding: 0, 
-                            transition: 'all 0.3s ease', // 添加過渡效果
+                            transition: 'all 0.3s ease', 
                             opacity: (!selectCompany || !selectedLaw || loading || !responseReport.length) ? '0.5' : '1', // 禁用時降低透明度
                             cursor: (!selectCompany || !selectedLaw || loading || !responseReport.length) ? 'not-allowed' : 'pointer', // 禁用時改變鼠標樣式
                             boxShadow: (!selectCompany || !selectedLaw || loading || !responseReport.length) ? 'none' : '0 2px 5px rgba(0,0,0,0.2)', // 禁用時移除陰影
@@ -385,6 +385,8 @@ const CheckPrivacyPolicy = () => {
                     >
                         {companyComplianceQAErrorCount}
                     </Button>
+
+                    {/* <div className="connector connector-bottom"></div> */}
                     
                     <Button 
                         label="檢查模式" 
@@ -393,32 +395,59 @@ const CheckPrivacyPolicy = () => {
                         onClick={(e) => changeDisplayMode('check')}
                         disabled={!selectCompany || !selectedLaw || loading}
                         outlined
+                        style={{
+                            border:(currentDisplayMode == 'check') ? '3px solid #0f2664' : '2px dotted #0f2664', 
+                            background: (currentDisplayMode == 'check') ? '#4a90e2' : '#6786cc', 
+                            color: 'white',
+                            opacity: (currentDisplayMode == 'check') ? '1' : '0.3',  
+                        }}
                     />
+
+
+                    {/* <div className="connector connector-bottom"></div> */}
+
                     <Button 
-                        label="修正模式" 
+                        label="校正模式" 
                         icon="pi pi-pencil" 
                         className="w-10" 
                         severity="warning" 
                         onClick={(e) => changeDisplayMode('modify')}
                         disabled={!selectCompany || !selectedLaw || loading}
                         outlined
+                        style={{
+                            border:(currentDisplayMode == 'modify') ? '3px solid #0f2664' : '2px dotted #0f2664', 
+                            background: '#3559b2',
+                            color: 'white',
+                            opacity: (currentDisplayMode == 'modify') ? '1' : '0.3', 
+                        }}
                     />
+
+                    {/* <div className="connector connector-bottom"></div> */}
+
                     <Button 
                         label="下載" 
                         icon="pi pi-download"
-                        className="ml-2 w-10" 
+                        className="w-10" 
                         severity="success" 
                         disabled={true}
                         outlined
+                        style={{
+                            borderColor: '#0f2664',
+                            background: '#00258e',
+                            color: 'white',
+                            opacity: '0.3'
+                        }}
                     />
                 </div>
-                <div className="w-8" style={{ fontSize: '1.1em', lineHeight: '1.6' }}>
+                <div className="w-9" style={{ fontSize: '1.1em', lineHeight: '1.6' }}>
                     {loading ? (
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                             <ProgressBar 
                                 value={loadingValue} 
                                 displayValueTemplate={progressBarValueTemplate} 
-                                style={{ width: '70%', marginTop: '1rem' }}></ProgressBar>
+                                style={{ width: '70%', marginTop: '1rem' }}
+                                color="#3559b2">
+                            </ProgressBar>
                             <ProgressSpinner style={{ width: '50px', height: '50px' , marginLeft: '20px' }} />
 
                         </div>
@@ -468,7 +497,7 @@ const CheckPrivacyPolicy = () => {
                 }}
             >
                 <TabView>
-                    <TabPanel header="修正建議">
+                    <TabPanel header="校正建議">
                         <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '1rem', fontSize: '1.1rem' }}>
                             <h4 style={{ fontSize: '1.5rem', fontFamily: 'inherit', fontWeight: '600' }}>隱私政策原文</h4>
                             <p>{currentResponseReport?.section}</p>
