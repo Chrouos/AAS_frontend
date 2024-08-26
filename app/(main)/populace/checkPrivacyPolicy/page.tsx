@@ -93,6 +93,8 @@ const CheckPrivacyPolicy = () => {
     const [loading, setLoading] = useState(false); 
     const [loadingValue, setLoadingValue] = useState(0);
 
+    const [htmlBodyPrivacyPolicy, setHtmlBodyPrivacyPolicy] = useState<string>("");
+
     const fetchCompanyPrivacyPolicy = async () => {
         try {
             const response = await fetch("http://140.115.54.33:5469/get_existing_privacy_policies");
@@ -123,19 +125,35 @@ const CheckPrivacyPolicy = () => {
 
     const handleConfirm = async () => {
 
+        setLoadingStatus(true, 0)
+
         setResponseReport([]);
         setResponsePrivacyPolicy('');
         setCompanyComplianceQA([])
         setCompanyComplianceQAErrorCount("0")
+        setCurrentDisplayMode('')
 
         try {
             if (selectCompanyUrl && selectedLaw) {
-                setLoadingStatus(true, 10)
+                
                 
                 const request = {
                     url: selectCompanyUrl,
                     selected_law: selectedLaw.title
                 };
+
+                const htmlBodyResponse = await fetch("http://140.115.54.33:5469/get_html_content", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (htmlBodyResponse.ok) {
+                    const data = await htmlBodyResponse.json();
+                    setHtmlBodyPrivacyPolicy(data.html)
+                }
+                setLoadingStatus(true, 20)
 
                 // Check Mode
                 const checkResponse = await fetch("http://140.115.54.33:5469/submit_ai_act_form", {
@@ -386,6 +404,12 @@ const CheckPrivacyPolicy = () => {
                         {companyComplianceQAErrorCount}
                     </Button>
 
+                    <div className="w-10 flex justify-content-center flex-wrap"> 
+                        <p className="w-10 text-500 text-sm text-center	">
+                            需修正資料共 {responseReport.length} 筆
+                        </p>
+                    </div>
+
                     {/* <div className="connector connector-bottom"></div> */}
                     
                     <Button 
@@ -402,9 +426,6 @@ const CheckPrivacyPolicy = () => {
                             opacity: (currentDisplayMode == 'check') ? '1' : '0.3',  
                         }}
                     />
-
-
-                    {/* <div className="connector connector-bottom"></div> */}
 
                     <Button 
                         label="校正模式" 
@@ -452,7 +473,8 @@ const CheckPrivacyPolicy = () => {
 
                         </div>
                     ) : (
-                        displayPrivacyPolicy
+                        // displayPrivacyPolicy
+                        <div dangerouslySetInnerHTML={{ __html: htmlBodyPrivacyPolicy }} />
                     )}
                 </div>
                 
