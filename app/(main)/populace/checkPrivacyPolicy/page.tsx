@@ -172,9 +172,6 @@ const CheckPrivacyPolicy = () => {
                     setCompanyComplianceQA(data.company_compliance_QA)
                     setCompanyComplianceQAErrorCount(data.company_compliance_check_false)
 
-                    const highlight_text = highlightPrivacyPolicy(data.privacy_policy, data.GDPR_report);
-                    setDisplayCheckHighlightText(highlight_text);
-                    setDisplayPrivacyPolicy(highlight_text); // 預設呈現畫面是檢查
                     setLoadingStatus(true, 40)
                     
                 } else {
@@ -196,8 +193,7 @@ const CheckPrivacyPolicy = () => {
                 if (ModifyResponse.ok) {
                     const data = await ModifyResponse.json();
 
-                    const modify_text = modifyRecommendedText(data.privacy_policy, data.modified_sections);
-                    setDisplayModifyHighlightText(modify_text);
+                    setModifyRecommended(data.modified_sections)
                     setLoadingStatus(true, 80)
                 } else {
                     console.error("Failed to fetch chatbot response");
@@ -208,6 +204,8 @@ const CheckPrivacyPolicy = () => {
         } catch (error) {
             console.error("Error fetching chatbot response:", error);
         } finally {
+            setDisplayPrivacyPolicy(highlightPrivacyPolicy_byHTML(htmlBodyPrivacyPolicy, responseReport)) // 預設
+
             setLoading(false);
             setLoadingStatus(false, 100)
             setCurrentDisplayMode('check')
@@ -318,12 +316,73 @@ const CheckPrivacyPolicy = () => {
         );
     };
 
+    const highlightPrivacyPolicy_byHTML = (htmlText: string, reports: Report[]): ReactNode[] => {
+        let highlightedText: ReactNode[] = [htmlText];
+        reports.forEach((report, sectionIndex) => {
+            highlightedText = highlightedText.map((chunk, chunkIndex) =>
+                typeof chunk === 'string'
+                    ? stringReplace(chunk, report.section, (match, i) => (
+                        <span
+                            key={`${sectionIndex}-${chunkIndex}-${i}`}
+                            onClick={() => {
+                                setCurrentResponseReport(report);
+                                setHighlightIsModalVisible(true);
+                            }}
+                            className="highlighted-text"
+                        >
+                            {match}
+                        </span>
+                    ))
+                    : chunk
+            ).flat();
+        });
+    
+        // 使用 dangerouslySetInnerHTML 來渲染 HTML 字符串
+        return highlightedText.map((textChunk, i) => 
+            typeof textChunk === 'string' ? (
+                <span key={i} dangerouslySetInnerHTML={{ __html: textChunk }} />
+            ) : (
+                textChunk
+            )
+        );
+    };
+
+    const modifyRecommendedText_byHtml = (htmlText: string, modifyRecommended: ModifyRecommended[]): ReactNode[] => {
+        let modifiedText: ReactNode[] = [htmlText];
+    
+        modifyRecommended.forEach((modifyItem, index) => {
+            modifiedText = modifiedText.map((chunk, chunkIndex) =>
+                typeof chunk === 'string'
+                    ? stringReplace(chunk, modifyItem.section_before, (match, i) => (
+                        <React.Fragment key={`${index}-${chunkIndex}-${i}`}>
+                            <span style={{ color: 'red', textDecoration: 'line-through' }}>
+                                {match}
+                            </span>
+                            <span style={{ color: 'green', marginLeft: '0.5em' }}>
+                                {modifyItem.section_after}
+                            </span>
+                        </React.Fragment>
+                    ))
+                    : chunk
+            ).flat();
+        });
+    
+        // 使用 dangerouslySetInnerHTML 來渲染 HTML 字符串
+        return modifiedText.map((textChunk, i) => 
+            typeof textChunk === 'string' ? (
+                <span key={i} dangerouslySetInnerHTML={{ __html: textChunk }} />
+            ) : (
+                textChunk
+            )
+        );
+    };
+
     const changeDisplayMode = (mode: string) => {
         setCurrentDisplayMode(mode);
         if (mode === 'check') {
-            setDisplayPrivacyPolicy(displayCheckHighlightText);
+            setDisplayPrivacyPolicy(highlightPrivacyPolicy_byHTML(htmlBodyPrivacyPolicy, responseReport));
         } else if (mode === 'modify') {
-            setDisplayPrivacyPolicy(displayModifyHighlightText);
+            setDisplayPrivacyPolicy(modifyRecommendedText_byHtml(htmlBodyPrivacyPolicy, modifyRecommended));
         }
     }
 
@@ -339,6 +398,7 @@ const CheckPrivacyPolicy = () => {
             </React.Fragment>
         );
     };
+
 
     return (
         <div className="card" style={{fontSize: '1.3rem'}}>
@@ -473,8 +533,10 @@ const CheckPrivacyPolicy = () => {
 
                         </div>
                     ) : (
-                        // displayPrivacyPolicy
-                        <div dangerouslySetInnerHTML={{ __html: htmlBodyPrivacyPolicy }} />
+                        displayPrivacyPolicy
+                        // modifyRecommendedText_byHtml(htmlBodyPrivacyPolicy, modifyRecommended)
+                        // highlightPrivacyPolicy_byHTML(htmlBodyPrivacyPolicy, responseReport)
+                        // <div dangerouslySetInnerHTML={{ __html: htmlBodyPrivacyPolicy }} />
                     )}
                 </div>
                 
@@ -549,7 +611,7 @@ const CheckPrivacyPolicy = () => {
                             <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>
                                 {selectedLaw ? `Art. ${currentResponseReport?.single_article} (${selectedLaw.title}) Conditions for consent` : ""}
                             </h4>
-                            {currentResponseReport?.Content_Items.map((articleContent, index) => (
+                            {currentResponseReport?.Content_Items?.map((articleContent, index) => (
                                 <p key={index}>{articleContent}</p>
                             ))}
                         </div>
