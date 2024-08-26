@@ -110,7 +110,7 @@ const CheckList = () => {
             <div className="card" style={{ width: '80%', height: '100%', marginBottom: '10px', position: 'relative', margin: 'auto' }}>
                 <div style={{ float: 'left', height: '100%', width: '50%', position: 'relative', margin: 'auto' }}>
                     <h1>隱私保障法普小學堂</h1>
-                    {questions.length > 0 && (
+                    {questions.length > 0 && currentQuestionIndex < questions.length && (
                         <div className="field">
                             <div style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#007ad9', letterSpacing: '0.02rem' }}>
                                 {currentQuestionIndex + 1}. {questions[currentQuestionIndex].Checklist_Item}
