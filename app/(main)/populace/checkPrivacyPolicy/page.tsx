@@ -9,6 +9,8 @@ import { PrimeIcons } from "primereact/api";
 import { ProgressSpinner } from 'primereact/progressspinner'; 
 import { TabView, TabPanel } from 'primereact/tabview'
 import { ProgressBar } from 'primereact/progressbar';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 
 const iconStyleSuccess = {
     color: 'white', 
@@ -46,11 +48,13 @@ interface ReportCompliant {
 }
 
 interface Report {
-    Content_Items: string[];
+    article_content: string[];
     amend: string;
     section: string;
     single_article: number;
+    legal_provision: string;
     compliant: ReportCompliant[];
+    Title: string;
 }
 
 interface CompanyComplianceQA {
@@ -126,35 +130,36 @@ const CheckPrivacyPolicy = () => {
     const handleConfirm = async () => {
 
         setLoadingStatus(true, 0)
-
+    
         setResponseReport([]);
         setResponsePrivacyPolicy('');
         setCompanyComplianceQA([])
         setCompanyComplianceQAErrorCount("0")
         setCurrentDisplayMode('')
-
+    
         try {
             if (selectCompanyUrl && selectedLaw) {
-                
                 
                 const request = {
                     url: selectCompanyUrl,
                     selected_law: selectedLaw.title
                 };
-
+    
                 const htmlBodyResponse = await fetch("http://140.115.54.33:5469/get_html_content", {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
                     },
                 });
-
+    
+                let htmlBodyPrivacyPolicy = '';
                 if (htmlBodyResponse.ok) {
                     const data = await htmlBodyResponse.json();
-                    setHtmlBodyPrivacyPolicy(data.html)
+                    htmlBodyPrivacyPolicy = data.html;
+                    setHtmlBodyPrivacyPolicy(htmlBodyPrivacyPolicy);
                 }
                 setLoadingStatus(true, 20)
-
+    
                 // Check Mode
                 const checkResponse = await fetch("http://140.115.54.33:5469/submit_ai_act_form", {
                     method: "POST",
@@ -164,21 +169,23 @@ const CheckPrivacyPolicy = () => {
                     body: JSON.stringify(request),
                 });
                 setLoadingStatus(true, 20)
-
+    
+                let GDPR_report = '';
                 if (checkResponse.ok) {
                     const data = await checkResponse.json();
                     setResponseReport(data.GDPR_report);
                     setResponsePrivacyPolicy(data.privacy_policy);
                     setCompanyComplianceQA(data.company_compliance_QA)
                     setCompanyComplianceQAErrorCount(data.company_compliance_check_false)
-
+    
+                    GDPR_report = data.GDPR_report;
+    
                     setLoadingStatus(true, 40)
                     
                 } else {
                     console.error("Failed to fetch chatbot response");
                 }
-
-
+    
                 // Modify Mode
                 const ModifyResponse = await fetch("http://140.115.54.33:5469/update_section", {
                     method: "POST",
@@ -188,29 +195,31 @@ const CheckPrivacyPolicy = () => {
                     body: JSON.stringify(request),
                 });
                 setLoadingStatus(true, 60)
-
-
+    
                 if (ModifyResponse.ok) {
                     const data = await ModifyResponse.json();
-
                     setModifyRecommended(data.modified_sections)
                     setLoadingStatus(true, 80)
                 } else {
                     console.error("Failed to fetch chatbot response");
                 }
+    
+                // Highlight and set privacy policy
+                const highlightedPrivacyPolicy = highlightPrivacyPolicy_byHTML(htmlBodyPrivacyPolicy, GDPR_report);
+                setDisplayPrivacyPolicy(highlightedPrivacyPolicy);
+    
             } else {
                 console.log("No company or law selected.");
             }
         } catch (error) {
             console.error("Error fetching chatbot response:", error);
         } finally {
-            setDisplayPrivacyPolicy(highlightPrivacyPolicy_byHTML(htmlBodyPrivacyPolicy, responseReport)) // 預設
-
             setLoading(false);
             setLoadingStatus(false, 100)
             setCurrentDisplayMode('check')
         }
     };
+    
 
     const countryTemplate = (option: any) => {
         return (
@@ -377,12 +386,26 @@ const CheckPrivacyPolicy = () => {
         );
     };
 
+    const reportSectionRecommendedText = (report: Report[]): ReactNode[] => {
+        return [
+            <DataTable value={report} style={{ fontSize: '1.2rem' }} scrollable={true} key="report-table">
+                <Column field="section" header="段落" style={{ width: '33%', wordWrap: 'break-word' }}></Column>
+                <Column field="legal_provision" header="條文" style={{ width: '33%', wordWrap: 'break-word' }}></Column>
+                <Column field="amend" header="建議" style={{ width: '33%', wordWrap: 'break-word' }}></Column>
+            </DataTable>
+        ];
+    };
+    
+
     const changeDisplayMode = (mode: string) => {
         setCurrentDisplayMode(mode);
         if (mode === 'check') {
             setDisplayPrivacyPolicy(highlightPrivacyPolicy_byHTML(htmlBodyPrivacyPolicy, responseReport));
         } else if (mode === 'modify') {
             setDisplayPrivacyPolicy(modifyRecommendedText_byHtml(htmlBodyPrivacyPolicy, modifyRecommended));
+        }
+        else if (mode === 'table-layout') {
+            setDisplayPrivacyPolicy(reportSectionRecommendedText(responseReport));
         }
     }
 
@@ -471,7 +494,7 @@ const CheckPrivacyPolicy = () => {
                     </div>
 
                     {/* <div className="connector connector-bottom"></div> */}
-                    
+
                     <Button 
                         label="檢查模式" 
                         icon="pi pi-search" 
@@ -481,9 +504,25 @@ const CheckPrivacyPolicy = () => {
                         outlined
                         style={{
                             border:(currentDisplayMode == 'check') ? '3px solid #0f2664' : '2px dotted #0f2664', 
-                            background: (currentDisplayMode == 'check') ? '#4a90e2' : '#6786cc', 
+                            background: (currentDisplayMode == 'check') ? '#3559b2' : '#3559b2', 
                             color: 'white',
                             opacity: (currentDisplayMode == 'check') ? '1' : '0.3',  
+                        }}
+                    />
+
+                    <Button 
+                        label="表格閱讀" 
+                        icon="pi pi-pencil" 
+                        className="w-10" 
+                        severity="warning" 
+                        onClick={(e) => changeDisplayMode('table-layout')}
+                        disabled={!selectCompany || !selectedLaw || loading}
+                        outlined
+                        style={{
+                            border:(currentDisplayMode == 'table-layout') ? '3px solid #0f2664' : '2px dotted #0f2664', 
+                            background: (currentDisplayMode == 'table-layout') ? '#3559b2' : '#3559b2', 
+                            color: 'white',
+                            opacity: (currentDisplayMode == 'table-layout') ? '1' : '0.3', 
                         }}
                     />
 
@@ -497,7 +536,7 @@ const CheckPrivacyPolicy = () => {
                         outlined
                         style={{
                             border:(currentDisplayMode == 'modify') ? '3px solid #0f2664' : '2px dotted #0f2664', 
-                            background: '#3559b2',
+                            background: (currentDisplayMode == 'modify') ? '#3559b2' : '#3559b2', 
                             color: 'white',
                             opacity: (currentDisplayMode == 'modify') ? '1' : '0.3', 
                         }}
@@ -514,7 +553,7 @@ const CheckPrivacyPolicy = () => {
                         outlined
                         style={{
                             borderColor: '#0f2664',
-                            background: '#00258e',
+                            background: '#3559b2',
                             color: 'white',
                             opacity: '0.3'
                         }}
@@ -609,9 +648,9 @@ const CheckPrivacyPolicy = () => {
                     <TabPanel header={selectedLaw ? `${selectedLaw.title}` : ""}>
                         <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '1rem' }}>
                             <h4 style={{ fontSize: '1.25rem', fontFamily: 'inherit', fontWeight: '600' }}>
-                                {selectedLaw ? `Art. ${currentResponseReport?.single_article} (${selectedLaw.title}) Conditions for consent` : ""}
+                                {selectedLaw ? `Art. ${currentResponseReport?.single_article} (${selectedLaw.title}) ${currentResponseReport?.Title}` : ""}
                             </h4>
-                            {currentResponseReport?.Content_Items?.map((articleContent, index) => (
+                            {currentResponseReport?.article_content?.map((articleContent, index) => (
                                 <p key={index}>{articleContent}</p>
                             ))}
                         </div>
