@@ -170,7 +170,7 @@ const CheckPrivacyPolicy = () => {
                 });
                 setLoadingStatus(true, 20)
     
-                let GDPR_report = '';
+                let GDPR_report: Report[] = [];
                 if (checkResponse.ok) {
                     const data = await checkResponse.json();
                     setResponseReport(data.GDPR_report);
@@ -500,7 +500,7 @@ const CheckPrivacyPolicy = () => {
                         icon="pi pi-search" 
                         className="w-10 color-primary-darker" 
                         onClick={(e) => changeDisplayMode('check')}
-                        disabled={!selectCompany || !selectedLaw || loading}
+                        disabled={!selectCompany || !selectedLaw || loading || htmlBodyPrivacyPolicy == ""}
                         outlined
                         style={{
                             border:(currentDisplayMode == 'check') ? '3px solid #0f2664' : '2px dotted #0f2664', 
@@ -516,7 +516,7 @@ const CheckPrivacyPolicy = () => {
                         className="w-10" 
                         severity="warning" 
                         onClick={(e) => changeDisplayMode('table-layout')}
-                        disabled={!selectCompany || !selectedLaw || loading}
+                        disabled={!selectCompany || !selectedLaw || loading || htmlBodyPrivacyPolicy == ""}
                         outlined
                         style={{
                             border:(currentDisplayMode == 'table-layout') ? '3px solid #0f2664' : '2px dotted #0f2664', 
@@ -532,7 +532,7 @@ const CheckPrivacyPolicy = () => {
                         className="w-10" 
                         severity="warning" 
                         onClick={(e) => changeDisplayMode('modify')}
-                        disabled={!selectCompany || !selectedLaw || loading}
+                        disabled={!selectCompany || !selectedLaw || loading || htmlBodyPrivacyPolicy == ""}
                         outlined
                         style={{
                             border:(currentDisplayMode == 'modify') ? '3px solid #0f2664' : '2px dotted #0f2664', 
